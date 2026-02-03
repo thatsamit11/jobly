@@ -9,16 +9,26 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     password: String,
+
     role: {
       type: String,
       enum: ["candidate", "recruiter", "admin"],
       required: true,
     },
+
     authProvider: {
       type: String,
       enum: ["local", "google"],
       default: "local",
     },
+
+    // ================= PROFILE FIELDS =================
+    profilePic: String,
+    bio: String,
+    location: String,
+    experience: String,
+    skills: [String],
+    resumeUrl: String,
   },
   { timestamps: true }
 );

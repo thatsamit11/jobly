@@ -1,181 +1,234 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import axios from "axios";
 
 const EditProfile = () => {
   const navigate = useNavigate();
 
-  const [profilePic, setProfilePic] = useState(null);
-  const [skills, setSkills] = useState([]);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    location: "",
+    experience: "",
+    bio: "",
+    profilePic: "",
+    skills: [],
+  });
+
   const [skillInput, setSkillInput] = useState("");
 
-  const handleProfilePicChange = (e) => {
+  /* 🔥 PREFILL FROM BACKEND (NOT ONLY LOCAL) */
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await axios.get(
+          "http://localhost:5000/api/profile/me",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = res.data;
+
+        setForm({
+          name: data.name || "",
+          email: data.email || "",
+          location: data.location || "",
+          experience: data.experience || "",
+          bio: data.bio || "",
+          profilePic: data.profilePic || "",
+          skills: data.skills || [],
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  /* 🔥 IMAGE → BASE64 */
+  const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setProfilePic(URL.createObjectURL(file));
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm((prev) => ({
+        ...prev,
+        profilePic: reader.result,
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const addSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput)) {
-      setSkills([...skills, skillInput]);
+    if (
+      skillInput &&
+      !form.skills.includes(skillInput)
+    ) {
+      setForm({
+        ...form,
+        skills: [...form.skills, skillInput],
+      });
       setSkillInput("");
     }
   };
 
-  const removeSkill = (skill) => {
-    setSkills(skills.filter((s) => s !== skill));
+  /* 🔥 SAVE PROFILE */
+  const saveProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Login expired");
+        return;
+      }
+
+      const res = await axios.put(
+        "http://localhost:5000/api/profile/me",
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      localStorage.setItem(
+        "candidateProfile",
+        JSON.stringify(res.data)
+      );
+
+      navigate("/candidate/profile");
+    } catch (err) {
+      console.error(err);
+      alert("Profile save failed");
+    }
   };
-
-const handleSave = () => {
-  const profileData = {
-    name: "Amit",
-    email: "amit@gmail.com",
-    location: "India",
-    experience: "1–3 Years",
-    bio: "Frontend Developer passionate about UI",
-    skills,
-    profilePic,
-  };
-
-  localStorage.setItem(
-    "candidateProfile",
-    JSON.stringify(profileData)
-  );
-
-  navigate("/candidate/dashboard/profile");
-};
 
   return (
-    <div className="h-full flex flex-col bg-gray-100">
+    <div className="min-h-screen bg-[#eef2f7] p-10">
+      <div className="bg-white max-w-3xl mx-auto rounded-2xl shadow p-8">
 
-      {/* HEADER */}
-      <div className="bg-white px-8 py-4 border-b flex justify-between items-center">
-        <h1 className="text-xl font-bold">Edit Profile</h1>
-        <button
-          onClick={() => navigate(-1)}
-          className="text-blue-600"
-        >
-          ← Back
-        </button>
-      </div>
+        <h1 className="text-2xl font-bold mb-6">
+          Edit Profile
+        </h1>
 
-      {/* SCROLLABLE FORM */}
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="bg-white p-8 rounded-2xl shadow max-w-3xl mx-auto">
+        <div className="flex items-center gap-6 mb-6">
+          <img
+            src={form.profilePic || "https://i.pravatar.cc/150"}
+            className="w-24 h-24 rounded-full object-cover border"
+          />
 
-          {/* PROFILE PIC */}
-          <div className="flex items-center gap-6 mb-8">
-            <img
-              src={profilePic || "https://i.pravatar.cc/150"}
-              alt="profile"
-              className="w-24 h-24 rounded-full object-cover ring-4 ring-blue-100"
+          <label className="cursor-pointer text-blue-600">
+            Change Photo
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
             />
-
-            <label className="cursor-pointer text-blue-600 font-medium">
-              Change Photo
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleProfilePicChange}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* FORM */}
-          <div className="grid grid-cols-2 gap-6">
-
-            <Input label="Full Name" placeholder="Your name" />
-            <Input label="Email" placeholder="Email address" />
-
-            <Input label="Location" placeholder="City, Country" />
-            <Input label="Experience" placeholder="1–3 Years" />
-
-            <div className="col-span-2">
-              <label className="block font-medium mb-1">Bio</label>
-              <textarea
-                rows="4"
-                placeholder="Tell something about yourself..."
-                className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-
-            {/* SKILLS */}
-            <div className="col-span-2">
-              <label className="block font-medium mb-2">Skills</label>
-
-              <div className="flex gap-2 mb-3">
-                <input
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  className="flex-1 border rounded-lg p-2"
-                  placeholder="Add skill (React)"
-                />
-                <button
-                  type="button"
-                  onClick={addSkill}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-                >
-                  Add
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full flex items-center gap-2"
-                  >
-                    {skill}
-                    <button
-                      onClick={() => removeSkill(skill)}
-                      className="text-sm"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* RESUME */}
-            <div className="col-span-2">
-              <label className="block font-medium mb-2">
-                Upload Resume (PDF)
-              </label>
-              <input
-                type="file"
-                accept=".pdf"
-                className="border p-2 w-full rounded-lg"
-              />
-            </div>
-
-          </div>
+          </label>
         </div>
-      </div>
 
-      {/* STICKY SAVE BUTTON */}
-      <div className="bg-white border-t px-8 py-4 flex justify-end">
+        <Input
+          label="Name"
+          value={form.name}
+          onChange={(e) =>
+            setForm({ ...form, name: e.target.value })
+          }
+        />
+
+        <Input
+          label="Email"
+          value={form.email}
+          onChange={(e) =>
+            setForm({ ...form, email: e.target.value })
+          }
+        />
+
+        <Input
+          label="Location"
+          value={form.location}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              location: e.target.value,
+            })
+          }
+        />
+
+        <Input
+          label="Experience"
+          value={form.experience}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              experience: e.target.value,
+            })
+          }
+        />
+
+        <textarea
+          value={form.bio}
+          onChange={(e) =>
+            setForm({ ...form, bio: e.target.value })
+          }
+          className="w-full border rounded-lg p-3 mb-4"
+          placeholder="Bio"
+        />
+
+        <div className="flex gap-2 mb-3">
+          <input
+            value={skillInput}
+            onChange={(e) =>
+              setSkillInput(e.target.value)
+            }
+            className="flex-1 border p-2 rounded"
+            placeholder="Add skill"
+          />
+          <button
+            type="button"
+            onClick={addSkill}
+            className="bg-blue-600 text-white px-4 rounded"
+          >
+            Add
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-6">
+          {form.skills.map((s) => (
+            <span
+              key={s}
+              className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full"
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+
         <button
-          onClick={handleSave}
-          className="px-8 py-3 bg-green-600 text-white rounded-xl text-lg hover:bg-green-700"
+          onClick={saveProfile}
+          className="px-8 py-3 bg-green-600 text-white rounded-xl"
         >
           Save Profile
         </button>
       </div>
-
     </div>
   );
 };
 
 const Input = ({ label, ...props }) => (
-  <div>
-    <label className="block font-medium mb-1">{label}</label>
-    <input
-      {...props}
-      className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400"
-    />
-  </div>
+  <input
+    {...props}
+    placeholder={label}
+    className="w-full border rounded-lg p-2 mb-4"
+  />
 );
 
 export default EditProfile;

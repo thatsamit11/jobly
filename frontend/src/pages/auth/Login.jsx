@@ -84,7 +84,7 @@ const Login = ({ role }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-500 to-purple-600 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
 
         <h2 className="text-3xl font-bold text-center text-gray-800">

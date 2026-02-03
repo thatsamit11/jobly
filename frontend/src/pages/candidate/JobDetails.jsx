@@ -1,8 +1,24 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [job, setJob] = useState(null);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:5000/api/jobs/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((res) => setJob(res.data))
+      .catch(() => alert("Failed to load job"));
+  }, [id]);
+
+  if (!job) return <p>Loading...</p>;
 
   return (
     <div className="h-full overflow-y-auto">
@@ -10,36 +26,22 @@ const JobDetails = () => {
 
         <div className="flex justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Frontend Developer</h1>
-            <p className="text-gray-600">Google • Remote</p>
-            <p className="text-gray-500">Experience: 1–3 Years</p>
+            <h1 className="text-2xl font-bold">{job.title}</h1>
+            <p className="text-gray-600">{job.location}</p>
+            <p className="text-gray-500">Salary: {job.salary}</p>
           </div>
 
-          <button
-            onClick={() => navigate(-1)}
-            className="text-blue-500"
-          >
+          <button onClick={() => navigate(-1)} className="text-blue-500">
             ← Back
           </button>
         </div>
 
         <h3 className="font-semibold mb-2">Job Description</h3>
-        <p className="text-gray-600 mb-4">
-          This is a full job description page. Backend aane ke baad
-          yahan real data aayega.
-        </p>
-
-        <h3 className="font-semibold mb-2">Requirements</h3>
-        <ul className="list-disc ml-5 text-gray-600 mb-6">
-          <li>React, JavaScript</li>
-          <li>Tailwind / CSS</li>
-          <li>REST APIs basics</li>
-        </ul>
+        <p className="text-gray-600 mb-6">{job.description}</p>
 
         <button className="px-6 py-3 bg-green-500 text-white rounded-xl">
           Apply for Job
         </button>
-
       </div>
     </div>
   );
