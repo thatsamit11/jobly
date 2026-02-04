@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
-const RecruiterJobs = () => {
-  const navigate = useNavigate();
-
+const PostedJobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,8 +12,7 @@ const RecruiterJobs = () => {
         const token = localStorage.getItem("token");
 
         if (!token) {
-          alert("Session expired. Please login again.");
-          navigate("/auth");
+          console.error("No token found");
           return;
         }
 
@@ -31,16 +27,16 @@ const RecruiterJobs = () => {
 
         setJobs(res.data);
       } catch (err) {
-        console.error("Error fetching recruiter jobs", err.response?.data || err.message);
+        console.error("Failed to fetch jobs", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMyJobs();
-  }, [navigate]);
+  }, []);
 
-  // 🔥 DELETE JOB (FINAL FIX)
+  // 🔥 DELETE JOB
   const handleDelete = async (jobId) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this job?"
@@ -52,7 +48,6 @@ const RecruiterJobs = () => {
 
       if (!token) {
         alert("Session expired. Please login again.");
-        navigate("/auth");
         return;
       }
 
@@ -65,37 +60,31 @@ const RecruiterJobs = () => {
         }
       );
 
-      // 🔥 REMOVE FROM UI
+      // 🔥 remove from UI
       setJobs((prev) => prev.filter((job) => job._id !== jobId));
     } catch (error) {
-      console.error(
-        "Failed to delete job",
-        error.response?.data || error.message
-      );
+      console.error("Failed to delete job", error.response?.data || error.message);
       alert("Failed to delete job");
     }
   };
 
   if (loading) {
-    return <p className="text-gray-500">Loading your jobs...</p>;
+    return <p className="text-gray-500">Loading posted jobs...</p>;
   }
 
   return (
     <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="text-xl font-semibold mb-6">Posted Jobs</h2>
+      <h2 className="text-xl font-semibold mb-6">Your Posted Jobs</h2>
 
       {jobs.length === 0 ? (
-        <p className="text-gray-500">
-          You have not posted any jobs yet.
-        </p>
+        <p className="text-gray-500">You have not posted any jobs yet.</p>
       ) : (
         <div className="space-y-4">
           {jobs.map((job) => (
             <div
               key={job._id}
-              className="border rounded-lg p-4 flex justify-between items-center hover:shadow transition"
+              className="border rounded-lg p-4 flex justify-between items-center"
             >
-              {/* LEFT */}
               <div>
                 <h3 className="font-semibold text-lg">{job.title}</h3>
                 <p className="text-sm text-gray-500">
@@ -103,8 +92,7 @@ const RecruiterJobs = () => {
                 </p>
               </div>
 
-              {/* RIGHT */}
-              <div className="flex gap-3 items-center">
+              <div className="flex items-center gap-3">
                 <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
                   Active
                 </span>
@@ -124,4 +112,4 @@ const RecruiterJobs = () => {
   );
 };
 
-export default RecruiterJobs;
+export default PostedJobs;

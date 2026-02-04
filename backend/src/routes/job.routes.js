@@ -7,6 +7,7 @@ import {
   getAllJobs,
   getJobById,
   getRecruiterJobs,
+  deleteJob, // ✅ ADD THIS
 } from "../controllers/job.controller.js";
 
 const router = express.Router();
@@ -14,6 +15,7 @@ const router = express.Router();
 // Recruiter routes
 router.post("/", auth, role("recruiter"), postJob);
 router.get("/recruiter", auth, role("recruiter"), getRecruiterJobs);
+router.delete("/:id", auth, role("recruiter"), deleteJob); // ✅ works now
 
 // Candidate routes
 router.get("/", auth, role("candidate"), getAllJobs);

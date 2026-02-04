@@ -18,7 +18,7 @@ const CandidateDashboard = () => {
     <div className="h-screen w-full bg-[#eef2f7] flex flex-col overflow-hidden">
 
       {/* ================= TOP HEADER ================= */}
-      <header className="h-[64px] px-8 flex items-center bg-gradient-to-r from-[#1e4fa1] to-[#2f80ed] text-white shadow shrink-0">
+      <header className="h-16 px-8 flex items-center bg-linear-to-r from-[#1e4fa1] to-[#2f80ed] text-white shadow shrink-0">
         <h1 className="text-lg font-semibold">
           Welcome Back, {profile.name || "User"}
         </h1>
