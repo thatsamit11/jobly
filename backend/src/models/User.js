@@ -3,11 +3,13 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     name: String,
+
     email: {
       type: String,
       unique: true,
       required: true,
     },
+
     password: String,
 
     role: {
@@ -22,15 +24,22 @@ const userSchema = new mongoose.Schema(
       default: "local",
     },
 
-    // ================= PROFILE FIELDS =================
+    // ===== COMMON PROFILE =====
     profilePic: String,
-    bio: String,
     location: String,
+    bio: String,
+
+    // ===== RECRUITER ONLY =====
+    companyName: String,
     experience: String,
+    dob: Date,
+
+    // ===== CANDIDATE ONLY =====
     skills: [String],
     resumeUrl: String,
   },
   { timestamps: true }
 );
 
-export default mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

@@ -4,136 +4,88 @@ import axios from "axios";
 
 const Login = ({ role }) => {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  // ================= GOOGLE INIT =================
   useEffect(() => {
-    /* global google */
-    if (window.google) {
-      google.accounts.id.initialize({
-        client_id:
-          "137141801241-5i8cr48d3en5puh3tn8nl7b5lbv5nn4v.apps.googleusercontent.com",
-        callback: handleGoogleResponse,
-      });
+    if (!window.google) return;
 
-      google.accounts.id.renderButton(
-        document.getElementById("googleLogin"),
-        {
-          theme: "outline",
-          size: "large",
-          width: "100%",
-        }
-      );
-    }
+    google.accounts.id.initialize({
+      client_id: "137141801241-5i8cr48d3en5puh3tn8nl7b5lbv5nn4v.apps.googleusercontent.com",
+      callback: handleGoogle,
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("googleLogin"),
+      { theme: "outline", size: "large", width: "100%" }
+    );
   }, [role]);
 
-  // ================= GOOGLE LOGIN =================
-  const handleGoogleResponse = async (response) => {
-  
+  const afterLogin = async (token, user) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", user.role);
 
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/google",
-        {
-          credential: response.credential,
-          role,
-        }
-      );
+    const profileRes = await axios.get(
+      "http://localhost:5000/api/profile/me",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      const { token, user } = res.data;
+    localStorage.setItem(
+      user.role === "candidate"
+        ? "candidateProfile"
+        : "recruiterProfile",
+      JSON.stringify(profileRes.data)
+    );
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.role);
-
-      navigate(`/${user.role}/dashboard`);
-    } catch (err) {
-      alert("Google login failed");
-      console.error(err);
-    }
+    navigate(`/${user.role}/dashboard`);
   };
 
-  // ================= NORMAL LOGIN =================
+  const handleGoogle = async (res) => {
+    const r = await axios.post(
+      "http://localhost:5000/api/auth/google",
+      { credential: res.credential, role }
+    );
+    afterLogin(r.data.token, r.data.user);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        {
-          email,
-          password,
-          role,
-        }
-      );
-
-      const { token, user } = res.data;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.role);
-
-      navigate(`/${user.role}/dashboard`);
-    } catch (err) {
-      alert(err.response?.data?.message || "Invalid email or password");
-    } finally {
-      setLoading(false);
-    }
+    const r = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      { email, password, role }
+    );
+    afterLogin(r.data.token, r.data.user);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-500 to-purple-600 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-
-        <h2 className="text-3xl font-bold text-center text-gray-800">
-          Welcome Back 👋
+    <div className="min-h-screen flex justify-center items-center">
+      <form onSubmit={handleLogin} className="bg-white p-8 rounded-xl w-96">
+        <h2 className="text-xl font-bold mb-4">
+          Login as {role}
         </h2>
-        <p className="text-center text-gray-500 mt-2 mb-6">
-          Login as {role || "User"}
-        </p>
 
-        {/* NORMAL LOGIN */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email address"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border rounded-xl"
-          />
+        <input
+          value={email}
+          onChange={(e)=>setEmail(e.target.value)}
+          placeholder="Email"
+          className="border p-2 w-full mb-3"
+        />
 
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border rounded-xl"
-          />
+        <input
+          type="password"
+          value={password}
+          onChange={(e)=>setPassword(e.target.value)}
+          placeholder="Password"
+          className="border p-2 w-full mb-3"
+        />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
+        <button className="w-full bg-blue-600 text-white py-2">
+          Login
+        </button>
 
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <span className="px-3 text-sm text-gray-500">OR</span>
-          <div className="flex-1 h-px bg-gray-300"></div>
-        </div>
-
-        {/* GOOGLE LOGIN */}
+        <div className="my-4 text-center">OR</div>
         <div id="googleLogin"></div>
-
-      </div>
+      </form>
     </div>
   );
 };

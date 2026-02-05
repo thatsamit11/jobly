@@ -1,68 +1,72 @@
 import { useNavigate } from "react-router-dom";
 
-const Profile = () => {
+const RecruiterProfile = () => {
   const navigate = useNavigate();
-  const profile = JSON.parse(localStorage.getItem("candidateProfile"));
+  const profile = JSON.parse(localStorage.getItem("recruiterProfile"));
 
-  if (!profile) return <div className="p-10">Loading...</div>;
+  if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-[#eef2f7] p-10 flex justify-center">
-      <div className="bg-white max-w-4xl w-full rounded-2xl shadow p-8">
+    <div className="p-10 flex justify-center">
+      <div className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-4xl">
 
         {/* HEADER */}
-        <div className="flex items-center gap-6 mb-8">
+        <div className="flex items-center gap-8 border-b pb-8">
           <img
             src={profile.profilePic || "https://i.pravatar.cc/150"}
-            className="w-28 h-28 rounded-full object-cover"
+            className="w-36 h-36 rounded-full object-cover ring-4 ring-blue-500"
           />
+
           <div>
-            <h1 className="text-2xl font-bold">{profile.name}</h1>
-            <p className="text-gray-500">{profile.email}</p>
-            <p className="text-gray-500">{profile.location}</p>
+            <h1 className="text-3xl font-bold">{profile.name}</h1>
+            <p className="text-xl text-gray-500">
+              {profile.companyName}
+            </p>
+            <p className="text-gray-400">{profile.email}</p>
           </div>
         </div>
 
         {/* DETAILS */}
-        <div className="space-y-4">
-          <p><b>Experience:</b> {profile.experience}</p>
-          <p><b>Bio:</b> {profile.bio}</p>
-
-          <div>
-            <b>Skills:</b>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {profile.skills?.map((s) => (
-                <span
-                  key={s}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* RESUME */}
-          {profile.resumeUrl && (
-            <a
-              href={profile.resumeUrl}
-              target="_blank"
-              className="inline-block mt-4 px-5 py-2 bg-green-600 text-white rounded-lg"
-            >
-              View Resume
-            </a>
-          )}
+        <div className="grid grid-cols-2 gap-8 mt-10 text-lg">
+          <Detail label="Experience" value={profile.experience} />
+          <Detail
+            label="Date of Birth"
+            value={
+              profile.dob
+                ? new Date(profile.dob).toDateString()
+                : "-"
+            }
+          />
+          <Detail label="Location" value={profile.location} />
         </div>
 
+        {/* BIO */}
+        <div className="mt-10">
+          <h3 className="text-xl font-semibold mb-2">About</h3>
+          <p className="text-gray-600 leading-relaxed">
+            {profile.bio || "No bio added"}
+          </p>
+        </div>
+
+        {/* ACTION */}
         <button
-          onClick={() => navigate("/candidate/profile/edit")}
-          className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-xl"
+          onClick={() =>
+            navigate("/recruiter/dashboard/edit-profile")
+          }
+          className="mt-10 px-8 py-3 bg-blue-600 text-white rounded-xl text-lg hover:bg-blue-700"
         >
-          Edit Profile
+          ✏️ Edit Profile
         </button>
       </div>
     </div>
   );
 };
 
-export default Profile;
+const Detail = ({ label, value }) => (
+  <div>
+    <p className="text-gray-400">{label}</p>
+    <p className="font-semibold">{value || "-"}</p>
+  </div>
+);
+
+export default RecruiterProfile;

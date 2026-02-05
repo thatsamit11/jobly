@@ -1,93 +1,84 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Jobs = () => {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         const token = localStorage.getItem("token");
-        const role = localStorage.getItem("role");
+        const res = await axios.get("http://localhost:5000/api/jobs", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        if (!token || role !== "candidate") {
-          console.warn("Not logged in as candidate");
-          return;
-        }
-
-        const res = await axios.get(
-          "http://localhost:5000/api/jobs",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setJobs(res.data);
+        if (Array.isArray(res.data)) setJobs(res.data);
+        else if (Array.isArray(res.data.jobs)) setJobs(res.data.jobs);
+        else setJobs([]);
       } catch (err) {
-        console.error("Failed to fetch jobs:", err.response?.data || err.message);
-      } finally {
-        setLoading(false);
+        console.error("Job fetch failed", err);
       }
     };
 
     fetchJobs();
   }, []);
 
-  if (loading) {
-    return <p className="text-gray-500">Loading jobs...</p>;
-  }
+  const filteredJobs = jobs.filter(
+    (job) =>
+      job.title?.toLowerCase().includes(search.toLowerCase()) ||
+      job.company?.toLowerCase().includes(search.toLowerCase()) ||
+      job.location?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="h-full max-h-full overflow-y-auto pr-2">
-      {jobs.length === 0 ? (
-        <p className="text-gray-500">No jobs available</p>
-      ) : (
+    <div className="grid grid-cols-3 gap-8">
+      {/* LEFT */}
+      <div className="col-span-2">
+        <div className="flex gap-4 mb-6">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search jobs by title, company, or location"
+            className="flex-1 px-5 py-3 rounded-xl border focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+          <button className="px-6 py-3 rounded-xl bg-blue-600 text-white">
+            Filter
+          </button>
+        </div>
+
         <div className="space-y-4">
-          {jobs.map((job) => (
+          {filteredJobs.map((job) => (
             <div
               key={job._id}
-              className="relative border p-4 rounded-xl bg-white hover:shadow transition"
+              onClick={() => navigate(`jobs/${job._id}`)}
+              className="
+                cursor-pointer p-6 rounded-2xl
+                border-2 border-blue-400
+                bg-gradient-to-br from-sky-50 to-white
+                hover:shadow-lg transition
+              "
             >
-              {/* JOB INFO */}
-              <div
-                onClick={() =>
-                  navigate(`/candidate/dashboard/jobs/${job._id}`)
-                }
-                className="cursor-pointer"
-              >
-                <h3 className="font-semibold text-lg">
-                  {job.title}
-                </h3>
-
-                <p className="text-gray-600 text-sm">
-                  {job.company} • {job.location}
-                </p>
-
-                <p className="text-gray-500 text-sm">
-                  Salary: {job.salary}
-                </p>
-              </div>
-
-              {/* APPLY BUTTON */}
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() =>
-                    navigate(`/candidate/dashboard/jobs/${job._id}`)
-                  }
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
-                >
-                  Apply
-                </button>
-              </div>
+              <h3 className="text-xl font-semibold">{job.title}</h3>
+              <p className="text-gray-600">
+                {job.company} • {job.location}
+              </p>
+              <p className="text-sm mt-1">Salary: {job.salary}</p>
             </div>
           ))}
         </div>
-      )}
+      </div>
+
+      {/* RIGHT */}
+      <div className="bg-white p-6 rounded-2xl shadow h-fit">
+        <h3 className="font-semibold mb-4">Application Status</h3>
+        <p>Applied: 12</p>
+        <p>In Review: 4</p>
+        <p>Interview: 2</p>
+        <p>Saved Jobs: 6</p>
+      </div>
     </div>
   );
 };

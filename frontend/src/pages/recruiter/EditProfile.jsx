@@ -1,108 +1,116 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const EditProfile = () => {
+const RecruiterEditProfile = () => {
   const navigate = useNavigate();
-  const [skillInput, setSkillInput] = useState("");
+  const saved = JSON.parse(localStorage.getItem("recruiterProfile"));
 
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    location: "",
-    experience: "",
-    bio: "",
-    profilePic: "",
-    resumeUrl: "",
-    skills: [],
+    name: saved?.name || "",
+    email: saved?.email || "",
+    companyName: saved?.companyName || "",
+    experience: saved?.experience || "",
+    dob: saved?.dob
+      ? saved.dob.slice(0, 10)
+      : "",
+    location: saved?.location || "",
+    bio: saved?.bio || "",
+    profilePic: saved?.profilePic || "",
   });
 
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("candidateProfile"));
-    if (data) setForm(data);
-  }, []);
+  const uploadImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const addSkill = () => {
-    if (skillInput && !form.skills.includes(skillInput)) {
-      setForm({ ...form, skills: [...form.skills, skillInput] });
-      setSkillInput("");
-    }
+    const reader = new FileReader();
+    reader.onloadend = () =>
+      setForm({ ...form, profilePic: reader.result });
+    reader.readAsDataURL(file);
   };
 
-  const removeSkill = (s) => {
-    setForm({ ...form, skills: form.skills.filter((x) => x !== s) });
-  };
-
-  const handleSave = async () => {
+  const save = async () => {
     const res = await axios.put(
       "http://localhost:5000/api/profile/me",
       form,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem(
+            "token"
+          )}`,
         },
       }
     );
 
-    localStorage.setItem("candidateProfile", JSON.stringify(res.data));
-    navigate("/candidate/profile");
+    localStorage.setItem(
+      "recruiterProfile",
+      JSON.stringify(res.data)
+    );
+
+    navigate("/recruiter/dashboard/profile");
   };
 
   return (
-    <div className="min-h-screen bg-[#eef2f7] p-10">
-      <div className="bg-white max-w-4xl mx-auto rounded-2xl shadow p-8">
-        <h1 className="text-2xl font-bold mb-6">Edit Profile</h1>
+    <div className="p-10 flex justify-center">
+      <div className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-4xl">
 
-        <div className="grid grid-cols-2 gap-6">
+        <h1 className="text-3xl font-bold mb-8">
+          Edit Recruiter Profile
+        </h1>
 
-          <Input label="Name" value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})}/>
-          <Input label="Email" value={form.email} onChange={(e)=>setForm({...form,email:e.target.value})}/>
-          <Input label="Location" value={form.location} onChange={(e)=>setForm({...form,location:e.target.value})}/>
-          <Input label="Experience" value={form.experience} onChange={(e)=>setForm({...form,experience:e.target.value})}/>
+        {/* IMAGE */}
+        <div className="flex items-center gap-6 mb-8">
+          <img
+            src={form.profilePic || "https://i.pravatar.cc/150"}
+            className="w-28 h-28 rounded-full object-cover"
+          />
 
-          <Input label="Profile Image URL" value={form.profilePic} onChange={(e)=>setForm({...form,profilePic:e.target.value})}/>
-          <Input label="Resume URL (PDF)" value={form.resumeUrl} onChange={(e)=>setForm({...form,resumeUrl:e.target.value})}/>
-
-          <div className="col-span-2">
-            <label>Bio</label>
-            <textarea
-              className="w-full border p-3 rounded-lg"
-              rows="4"
-              value={form.bio}
-              onChange={(e)=>setForm({...form,bio:e.target.value})}
+          <label className="cursor-pointer text-blue-600">
+            Upload Image
+            <input
+              type="file"
+              accept="image/*"
+              onChange={uploadImage}
+              className="hidden"
             />
-          </div>
-
-          {/* SKILLS */}
-          <div className="col-span-2">
-            <label>Skills</label>
-            <div className="flex gap-2 mb-3">
-              <input
-                value={skillInput}
-                onChange={(e)=>setSkillInput(e.target.value)}
-                className="border p-2 flex-1 rounded-lg"
-              />
-              <button onClick={addSkill} className="bg-blue-600 text-white px-4 rounded-lg">
-                Add
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {form.skills.map((s) => (
-                <span key={s} className="bg-blue-100 px-3 py-1 rounded-full">
-                  {s}
-                  <button onClick={()=>removeSkill(s)} className="ml-2">✕</button>
-                </span>
-              ))}
-            </div>
-          </div>
+          </label>
         </div>
 
-        <div className="flex justify-end mt-8">
-          <button onClick={handleSave} className="bg-green-600 text-white px-8 py-3 rounded-xl">
-            Save Profile
-          </button>
+        {/* FORM */}
+        <div className="grid grid-cols-2 gap-6">
+          <Input label="Name" value={form.name}
+            onChange={(e)=>setForm({...form,name:e.target.value})} />
+
+          <Input label="Email" value={form.email} disabled />
+
+          <Input label="Company Name" value={form.companyName}
+            onChange={(e)=>setForm({...form,companyName:e.target.value})} />
+
+          <Input label="Experience" value={form.experience}
+            onChange={(e)=>setForm({...form,experience:e.target.value})} />
+
+          <Input label="Date of Birth" type="date"
+            value={form.dob}
+            onChange={(e)=>setForm({...form,dob:e.target.value})} />
+
+          <Input label="Location" value={form.location}
+            onChange={(e)=>setForm({...form,location:e.target.value})} />
         </div>
+
+        <textarea
+          className="w-full border rounded-xl p-4 mt-6"
+          rows="4"
+          placeholder="Bio"
+          value={form.bio}
+          onChange={(e)=>setForm({...form,bio:e.target.value})}
+        />
+
+        <button
+          onClick={save}
+          className="mt-8 bg-green-600 text-white px-10 py-3 rounded-xl text-lg hover:bg-green-700"
+        >
+          💾 Save Profile
+        </button>
       </div>
     </div>
   );
@@ -110,9 +118,14 @@ const EditProfile = () => {
 
 const Input = ({ label, ...props }) => (
   <div>
-    <label className="block font-medium mb-1">{label}</label>
-    <input {...props} className="w-full border p-2 rounded-lg" />
+    <label className="block text-gray-500 mb-1">
+      {label}
+    </label>
+    <input
+      {...props}
+      className="w-full border rounded-xl p-3"
+    />
   </div>
 );
 
-export default EditProfile;
+export default RecruiterEditProfile;

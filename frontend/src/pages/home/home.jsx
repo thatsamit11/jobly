@@ -4,20 +4,28 @@ import ShaderBackground from "../../components/ShaderBackground";
 const Home = () => {
   const navigate = useNavigate();
 
+  // ✅ FIXED
   const handleFindJobs = () => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
-    if (!token) navigate("/auth?role=candidate");
-    else navigate(`/${role}/dashboard`);
+    if (!token) {
+      navigate("/auth?mode=login&role=candidate");
+    } else {
+      navigate(`/${role}/dashboard`);
+    }
   };
 
+  // ✅ FIXED
   const handleHireTalent = () => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
-    if (!token) navigate("/auth?role=recruiter");
-    else navigate(`/${role}/dashboard`);
+    if (!token) {
+      navigate("/auth?mode=login&role=recruiter");
+    } else {
+      navigate(`/${role}/dashboard`);
+    }
   };
 
   return (
@@ -33,7 +41,7 @@ const Home = () => {
 
           <div className="flex gap-4">
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=login")}
               className="px-5 py-2 rounded-full border border-sky-400 text-sky-400
                          hover:bg-sky-400 hover:text-white transition"
             >
