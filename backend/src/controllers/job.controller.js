@@ -19,7 +19,12 @@ export const deleteJob = async (req, res) => {
   const job = await Job.findById(req.params.id);
   if (!job) return res.status(404).json({ message: "Job not found" });
 
-  if (job.recruiterId.toString() !== req.user.id)
+  // 🔍 DEBUG LOGS
+  console.log("JOB RECRUITER ID:", job.recruiterId.toString());
+  console.log("LOGGED IN USER ID:", req.user.id);
+
+  if (job.recruiterId.toString() !== req.user.id.toString())
+
     return res.status(403).json({ message: "Unauthorized" });
 
   await job.deleteOne();
@@ -63,6 +68,18 @@ export const saveJob = async (req, res) => {
   await user.save();
 
   res.json({ message: "Saved" });
+};
+
+/* 🔥 UNSAVE JOB */
+export const unsaveJob = async (req, res) => {
+  const user = await User.findById(req.user.id);
+
+  user.savedJobs = user.savedJobs.filter(
+    (jobId) => jobId.toString() !== req.params.id
+  );
+
+  await user.save();
+  res.json({ message: "Job unsaved" });
 };
 
 /* GET SAVED JOBS */

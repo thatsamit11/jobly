@@ -6,6 +6,7 @@ import {
   applyJob,
   recruiterApplications,
   candidateApplications,
+  withdrawApplication,
 } from "../controllers/application.controller.js";
 
 const router = express.Router();
@@ -23,6 +24,13 @@ router.get(
   auth,
   role("candidate"),
   candidateApplications
+);
+
+router.delete(
+  "/withdraw/:id",
+  auth,
+  role("candidate"),
+  withdrawApplication
 );
 
 /* ================= RECRUITER ================= */

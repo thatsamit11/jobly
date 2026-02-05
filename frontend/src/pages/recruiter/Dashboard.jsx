@@ -190,6 +190,7 @@ const SidebarBtn = ({ icon, label, active, onClick }) => (
     <span className="text-lg">{icon}</span>
     <span className="font-medium">{label}</span>
   </button>
+  
 );
 
 const StatCard = ({ title, count, gradient }) => (

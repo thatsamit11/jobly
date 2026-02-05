@@ -5,31 +5,43 @@ const AppliedJobs = () => {
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const token = localStorage.getItem("token");
+
+  const fetchApplications = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/applications/candidate",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setApps(res.data);
+    } catch (err) {
+      setApps([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        const res = await axios.get(
-          "http://localhost:5000/api/applications/candidate",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setApps(res.data);
-      } catch (err) {
-        console.error("Failed to fetch applied jobs", err);
-        setApps([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchApplications();
   }, []);
+
+  const handleWithdraw = async (appId) => {
+    await axios.delete(
+      `http://localhost:5000/api/applications/withdraw/${appId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setApps((prev) => prev.filter((a) => a._id !== appId));
+  };
 
   if (loading) {
     return <p className="text-gray-500">Loading applications...</p>;
@@ -47,8 +59,18 @@ const AppliedJobs = () => {
         apps.map((app) => (
           <div
             key={app._id}
-            className="bg-white p-6 rounded-xl shadow border"
+            className="bg-white p-6 rounded-xl shadow relative"
           >
+            {/* 3 DOTS */}
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={() => handleWithdraw(app._id)}
+                className="text-sm text-red-600 hover:underline"
+              >
+                ❌ Withdraw
+              </button>
+            </div>
+
             <h3 className="text-lg font-semibold">
               {app.job?.title}
             </h3>
