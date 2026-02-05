@@ -6,6 +6,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import jobRoutes from "./routes/job.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
+import applicationRoutes from "./routes/application.routes.js";
 
 dotenv.config();
 connectDB();
@@ -21,6 +22,7 @@ app.use(cors());
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/applications", applicationRoutes);
 
 app.listen(5000, () =>
   console.log("Server running on 5000")

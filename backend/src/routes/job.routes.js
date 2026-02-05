@@ -7,18 +7,22 @@ import {
   getAllJobs,
   getJobById,
   getRecruiterJobs,
-  deleteJob, // ✅ ADD THIS
+  deleteJob,
+  saveJob,
+  getSavedJobs,
 } from "../controllers/job.controller.js";
 
 const router = express.Router();
 
-// Recruiter routes
+/* RECRUITER */
 router.post("/", auth, role("recruiter"), postJob);
 router.get("/recruiter", auth, role("recruiter"), getRecruiterJobs);
-router.delete("/:id", auth, role("recruiter"), deleteJob); // ✅ works now
+router.delete("/:id", auth, role("recruiter"), deleteJob);
 
-// Candidate routes
+/* CANDIDATE */
 router.get("/", auth, role("candidate"), getAllJobs);
+router.get("/saved", auth, role("candidate"), getSavedJobs);
+router.post("/save/:id", auth, role("candidate"), saveJob);
 router.get("/:id", auth, role("candidate"), getJobById);
 
 export default router;

@@ -7,13 +7,16 @@ const CandidateDashboard = () => {
   const user = JSON.parse(localStorage.getItem("candidateProfile"));
 
   useEffect(() => {
-    if (!user) navigate("/");
+    if (!user) {
+      navigate("/");
+    }
   }, [user, navigate]);
 
   if (!user) return null;
 
   return (
     <>
+      {/* NAVBAR ONLY HERE */}
       <CandidateNavbar user={user} />
 
       <div className="bg-gray-50 min-h-screen px-10 py-8">
@@ -24,7 +27,7 @@ const CandidateDashboard = () => {
           Find your next opportunity today
         </p>
 
-        {/* CHILD ROUTES */}
+        {/* CHILD ROUTES RENDER HERE */}
         <Outlet />
       </div>
     </>

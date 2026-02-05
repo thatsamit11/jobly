@@ -24,22 +24,27 @@ const userSchema = new mongoose.Schema(
       default: "local",
     },
 
-    // ===== COMMON PROFILE =====
+    // COMMON
     profilePic: String,
     location: String,
     bio: String,
 
-    // ===== RECRUITER ONLY =====
-    companyName: String,
-    experience: String,
-    dob: Date,
-
-    // ===== CANDIDATE ONLY =====
+    // CANDIDATE
     skills: [String],
     resumeUrl: String,
+
+    savedJobs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Job",
+      },
+    ],
+
+    // RECRUITER
+    companyName: String,
+    experience: String,
   },
   { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
-export default User;
+export default mongoose.model("User", userSchema);

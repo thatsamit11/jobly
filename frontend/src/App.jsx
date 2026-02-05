@@ -5,18 +5,18 @@ import Auth from "./pages/auth/Auth";
 
 // ================= CANDIDATE =================
 import CandidateDashboard from "./pages/candidate/Dashboard";
-import Jobs from "./pages/candidate/Jobs";
+import CandidateJobs from "./pages/candidate/Jobs";
 import JobDetails from "./pages/candidate/JobDetails";
 import SavedJobs from "./pages/candidate/SavedJobs";
 import AppliedJobs from "./pages/candidate/AppliedJobs";
-import Profile from "./pages/candidate/Profile";
-import EditProfile from "./pages/candidate/EditProfile";
+import CandidateProfile from "./pages/candidate/Profile";
+import CandidateEditProfile from "./pages/candidate/EditProfile";
 
 // ================= RECRUITER =================
 import RecruiterDashboard from "./pages/recruiter/Dashboard";
 import DashboardHome from "./pages/recruiter/DashboardHome";
 import PostJob from "./pages/recruiter/PostJob";
-import RecruiterJobs from "./pages/recruiter/Jobs";
+import PostedJobs from "./pages/recruiter/PostedJobs";
 import Applications from "./pages/recruiter/Applications";
 import ApplicationDetail from "./pages/recruiter/ApplicationDetail";
 import RecruiterProfile from "./pages/recruiter/Profile";
@@ -26,27 +26,26 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* PUBLIC */}
+        {/* ================= PUBLIC ================= */}
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />
 
-        {/* CANDIDATE DASHBOARD */}
+        {/* ================= CANDIDATE ================= */}
         <Route path="/candidate/dashboard" element={<CandidateDashboard />}>
-          <Route index element={<Jobs />} />
+          <Route index element={<CandidateJobs />} />
           <Route path="jobs/:id" element={<JobDetails />} />
           <Route path="saved-jobs" element={<SavedJobs />} />
           <Route path="applied-jobs" element={<AppliedJobs />} />
         </Route>
 
-        {/* ✅ FULL PAGE PROFILE */}
-        <Route path="/candidate/profile" element={<Profile />} />
-        <Route path="/candidate/profile/edit" element={<EditProfile />} />
+        <Route path="/candidate/profile" element={<CandidateProfile />} />
+        <Route path="/candidate/profile/edit" element={<CandidateEditProfile />} />
 
-        {/* RECRUITER */}
+        {/* ================= RECRUITER ================= */}
         <Route path="/recruiter/dashboard" element={<RecruiterDashboard />}>
           <Route index element={<DashboardHome />} />
           <Route path="post-job" element={<PostJob />} />
-          <Route path="jobs" element={<RecruiterJobs />} />
+          <Route path="jobs" element={<PostedJobs />} />
           <Route path="applications" element={<Applications />} />
           <Route path="applications/:id" element={<ApplicationDetail />} />
           <Route path="profile" element={<RecruiterProfile />} />
