@@ -6,6 +6,14 @@ import ShaderBackground from "../../components/ShaderBackground";
 const Login = ({ role }) => {
   const navigate = useNavigate();
 
+  // ✅ ENV VARIABLES
+  const API = import.meta.env.VITE_API_URL;
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  // ✅ DEBUG
+  console.log("API URL:", API);
+  console.log("GOOGLE CLIENT ID:", GOOGLE_CLIENT_ID);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -14,19 +22,18 @@ const Login = ({ role }) => {
 
   // ================= GOOGLE INIT =================
   useEffect(() => {
-    if (!window.google) return;
+    if (!window.google || !GOOGLE_CLIENT_ID) return;
 
     window.google.accounts.id.initialize({
-      client_id:
-        "137141801241-5i8cr48d3en5puh3tn8nl7b5lbv5nn4v.apps.googleusercontent.com",
+      client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogle,
     });
 
     window.google.accounts.id.renderButton(
       document.getElementById("googleLogin"),
-      { theme: "outline", size: "large", width: "100%" }
+      { theme: "outline", size: "large", width: 300 } // ✅ 100% hata diya
     );
-  }, [role]);
+  }, [role, GOOGLE_CLIENT_ID]);
 
   // ================= AFTER LOGIN =================
   const afterLogin = async (token, user) => {
@@ -34,7 +41,7 @@ const Login = ({ role }) => {
     localStorage.setItem("role", user.role);
 
     const profileRes = await axios.get(
-      "http://localhost:5000/api/profile/me",
+      `${API}/api/profile/me`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -55,7 +62,7 @@ const Login = ({ role }) => {
       setLoading(true);
 
       const r = await axios.post(
-        "http://localhost:5000/api/auth/google",
+        `${API}/api/auth/google`,
         { credential: res.credential, role }
       );
 
@@ -63,7 +70,7 @@ const Login = ({ role }) => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Google login unsuccessful. Please try again."
+        "Google login unsuccessful. Please try again."
       );
     } finally {
       setLoading(false);
@@ -79,7 +86,7 @@ const Login = ({ role }) => {
       setLoading(true);
 
       const r = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${API}/api/auth/login`,
         { email, password, role }
       );
 
@@ -87,7 +94,7 @@ const Login = ({ role }) => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Login unsuccessful. Please check credentials."
+        "Login unsuccessful. Please check credentials."
       );
     } finally {
       setLoading(false);
@@ -97,7 +104,7 @@ const Login = ({ role }) => {
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
       
-      {/* LEFT – SHADER + TEXT */}
+      {/* LEFT */}
       <div className="relative hidden md:block">
         <ShaderBackground />
         <div className="absolute inset-0 flex items-center justify-center text-white px-10">
@@ -113,7 +120,7 @@ const Login = ({ role }) => {
         </div>
       </div>
 
-      {/* RIGHT – LOGIN FORM */}
+      {/* RIGHT */}
       <div className="flex items-center justify-center px-6 bg-gray-50">
         <form
           onSubmit={handleLogin}
@@ -127,7 +134,6 @@ const Login = ({ role }) => {
             Continue as <span className="font-semibold">{role}</span>
           </p>
 
-          {/* 🔴 ERROR ALERT (Design Safe) */}
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-red-100 text-red-600 text-sm">
               {error}

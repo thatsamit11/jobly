@@ -6,44 +6,54 @@ import ShaderBackground from "../../components/ShaderBackground";
 const Register = ({ role }) => {
   const navigate = useNavigate();
 
+  // ✅ ENV VARIABLES
+  const API = import.meta.env.VITE_API_URL;
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   const [selectedRole, setSelectedRole] = useState(role || "");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ================= GOOGLE INIT =================
   useEffect(() => {
     if (!window.google) return;
 
-    google.accounts.id.initialize({
-      client_id:
-        "137141801241-5i8cr48d3en5puh3tn8nl7b5lbv5nn4v.apps.googleusercontent.com",
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogleResponse,
     });
 
-    google.accounts.id.renderButton(
+    window.google.accounts.id.renderButton(
       document.getElementById("googleSignIn"),
       { theme: "outline", size: "large", width: "100%" }
     );
   }, [selectedRole]);
 
+  // ================= GOOGLE REGISTER =================
   const handleGoogleResponse = async (response) => {
     if (!selectedRole) {
       alert("Please select a role first");
       return;
     }
 
-    const res = await axios.post(
-      "http://localhost:5000/api/auth/google",
-      { credential: response.credential, role: selectedRole }
-    );
+    try {
+      const res = await axios.post(
+        `${API}/api/auth/google`,
+        { credential: response.credential, role: selectedRole }
+      );
 
-    localStorage.setItem("token", res.data.token);
-    localStorage.setItem("role", res.data.user.role);
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("role", res.data.user.role);
 
-    navigate(`/${res.data.user.role}/dashboard`);
+      navigate(`/${res.data.user.role}/dashboard`);
+    } catch (err) {
+      alert(err.response?.data?.message || "Google registration failed");
+    }
   };
 
+  // ================= NORMAL REGISTER =================
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!selectedRole) return alert("Please select a role");
@@ -52,7 +62,7 @@ const Register = ({ role }) => {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:5000/api/auth/register",
+        `${API}/api/auth/register`,
         { name, email, password, role: selectedRole }
       );
 
