@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import ShaderBackground from "../../components/ShaderBackground";
 
 const Register = ({ role }) => {
   const navigate = useNavigate();
@@ -11,83 +12,54 @@ const Register = ({ role }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ================= GOOGLE INIT =================
   useEffect(() => {
-    /* global google */
-    if (window.google) {
-      google.accounts.id.initialize({
-        client_id:
-          "137141801241-5i8cr48d3en5puh3tn8nl7b5lbv5nn4v.apps.googleusercontent.com",
-        callback: handleGoogleResponse,
-      });
+    if (!window.google) return;
 
-      google.accounts.id.renderButton(
-        document.getElementById("googleSignIn"),
-        {
-          theme: "outline",
-          size: "large",
-          width: "100%",
-        }
-      );
-    }
+    google.accounts.id.initialize({
+      client_id:
+        "137141801241-5i8cr48d3en5puh3tn8nl7b5lbv5nn4v.apps.googleusercontent.com",
+      callback: handleGoogleResponse,
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("googleSignIn"),
+      { theme: "outline", size: "large", width: "100%" }
+    );
   }, [selectedRole]);
 
-  // ================= GOOGLE REGISTER / LOGIN =================
   const handleGoogleResponse = async (response) => {
     if (!selectedRole) {
       alert("Please select a role first");
       return;
     }
 
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/google",
-        {
-          credential: response.credential,
-          role: selectedRole,
-        }
-      );
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/google",
+      { credential: response.credential, role: selectedRole }
+    );
 
-      const { token, user } = res.data;
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("role", res.data.user.role);
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.role);
-
-      navigate(`/${user.role}/dashboard`);
-    } catch (err) {
-      alert("Google login failed");
-      console.error(err);
-    }
+    navigate(`/${res.data.user.role}/dashboard`);
   };
 
-  // ================= NORMAL REGISTER (REAL) =================
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    if (!selectedRole) {
-      alert("Please select a role");
-      return;
-    }
+    if (!selectedRole) return alert("Please select a role");
 
     try {
       setLoading(true);
 
       const res = await axios.post(
         "http://localhost:5000/api/auth/register",
-        {
-          name,
-          email,
-          password,
-          role: selectedRole,
-        }
+        { name, email, password, role: selectedRole }
       );
 
-      const { token, user } = res.data;
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("role", res.data.user.role);
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.role);
-
-      navigate(`/${user.role}/dashboard`);
+      navigate(`/${res.data.user.role}/dashboard`);
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
     } finally {
@@ -96,81 +68,104 @@ const Register = ({ role }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-500 to-orange-500 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800">
-          Create Account 🚀
-        </h2>
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
 
-        {/* ROLE */}
-        <div className="grid grid-cols-2 gap-4 my-6">
-          <button
-            type="button"
-            onClick={() => setSelectedRole("candidate")}
-            className={`p-4 rounded-xl border font-semibold ${
-              selectedRole === "candidate"
-                ? "bg-blue-600 text-white"
-                : "border-gray-300"
-            }`}
-          >
-            Candidate
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedRole("recruiter")}
-            className={`p-4 rounded-xl border font-semibold ${
-              selectedRole === "recruiter"
-                ? "bg-purple-600 text-white"
-                : "border-gray-300"
-            }`}
-          >
-            Recruiter
-          </button>
+      {/* LEFT – SHADER + TEXT */}
+      <div className="relative hidden md:block">
+        <ShaderBackground />
+        <div className="absolute inset-0 flex items-center justify-center text-white px-10">
+          <div className="max-w-lg">
+            <h1 className="text-4xl font-bold leading-tight">
+              Start Your Journey with Jobly
+            </h1>
+            <p className="mt-6 text-white/80 text-lg">
+              Build your career or grow your team using a modern,
+              fast and role-based hiring platform.
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* GOOGLE */}
-        <div id="googleSignIn" className="mb-4"></div>
+      {/* RIGHT – REGISTER FORM */}
+      <div className="flex items-center justify-center px-6 bg-gray-50">
+        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
 
-        <div className="text-center text-gray-400 my-2">OR</div>
+          <h2 className="text-3xl font-bold text-gray-800 text-center">
+            Create Account
+          </h2>
 
-        {/* NORMAL REGISTER */}
-        <form onSubmit={handleRegister} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Full Name"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 border rounded-xl"
-          />
+          {/* ROLE */}
+          <div className="grid grid-cols-2 gap-4 my-6">
+            <button
+              type="button"
+              onClick={() => setSelectedRole("candidate")}
+              className={`p-4 rounded-xl border font-semibold ${
+                selectedRole === "candidate"
+                  ? "bg-blue-600 text-white"
+                  : "border-gray-300"
+              }`}
+            >
+              Candidate
+            </button>
 
-          <input
-            type="email"
-            placeholder="Email address"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border rounded-xl"
-          />
+            <button
+              type="button"
+              onClick={() => setSelectedRole("recruiter")}
+              className={`p-4 rounded-xl border font-semibold ${
+                selectedRole === "recruiter"
+                  ? "bg-purple-600 text-white"
+                  : "border-gray-300"
+              }`}
+            >
+              Recruiter
+            </button>
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border rounded-xl"
-          />
+          {/* GOOGLE */}
+          <div id="googleSignIn" className="mb-4"></div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-orange-500 text-white font-semibold"
-          >
-            {loading ? "Registering..." : "Register"}
-          </button>
-        </form>
+          <div className="text-center text-gray-400 my-2">
+            OR
+          </div>
+
+          {/* NORMAL REGISTER */}
+          <form onSubmit={handleRegister} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Full Name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl"
+            />
+
+            <input
+              type="email"
+              placeholder="Email address"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold transition"
+            >
+              {loading ? "Registering..." : "Register"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

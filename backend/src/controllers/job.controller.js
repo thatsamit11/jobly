@@ -19,9 +19,7 @@ export const deleteJob = async (req, res) => {
   const job = await Job.findById(req.params.id);
   if (!job) return res.status(404).json({ message: "Job not found" });
 
-  // 🔍 DEBUG LOGS
-  console.log("JOB RECRUITER ID:", job.recruiterId.toString());
-  console.log("LOGGED IN USER ID:", req.user.id);
+
 
   if (job.recruiterId.toString() !== req.user.id.toString())
 

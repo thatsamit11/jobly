@@ -5,7 +5,7 @@ import { OAuth2Client } from "google-auth-library";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// 🔑 JWT helper
+// ================= JWT HELPER =================
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
@@ -50,6 +50,7 @@ export const register = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("REGISTER ERROR:", err);
     res.status(500).json({ message: "Register failed" });
   }
 };
@@ -59,8 +60,8 @@ export const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email & password required" });
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: "All fields required" });
     }
 
     const user = await User.findOne({ email });
@@ -68,8 +69,17 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    if (role && user.role !== role) {
-      return res.status(403).json({ message: "Role mismatch" });
+    // 🔥 ROLE STRICT CHECK
+    if (user.role !== role) {
+      return res
+        .status(403)
+        .json({ message: `This account is registered as ${user.role}` });
+    }
+
+    if (user.authProvider === "google") {
+      return res.status(400).json({
+        message: "Please login using Google for this account",
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -89,6 +99,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("LOGIN ERROR:", err);
     res.status(500).json({ message: "Login failed" });
   }
 };
@@ -97,6 +108,10 @@ export const login = async (req, res) => {
 export const googleAuth = async (req, res) => {
   try {
     const { credential, role } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: "Google credential missing" });
+    }
 
     const ticket = await client.verifyIdToken({
       idToken: credential,
@@ -108,11 +123,16 @@ export const googleAuth = async (req, res) => {
 
     let user = await User.findOne({ email });
 
-    // 👇 EXISTING USER → ROLE DB SE LO
+    // ================= EXISTING USER =================
     if (user) {
-      // nothing to do
-    } 
-    // 👇 NEW USER → ROLE REQUIRED
+      // 🔥 STRICT ROLE MATCH CHECK
+      if (role && user.role !== role) {
+        return res.status(403).json({
+          message: `This account is registered as ${user.role}`,
+        });
+      }
+    }
+    // ================= NEW USER =================
     else {
       if (!role) {
         return res
@@ -136,11 +156,11 @@ export const googleAuth = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role, // 🔥 DB role
+        role: user.role,
       },
     });
   } catch (err) {
+    console.error("GOOGLE AUTH ERROR:", err);
     res.status(401).json({ message: "Google auth failed" });
   }
 };
-
